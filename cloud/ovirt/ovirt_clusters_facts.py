@@ -26,42 +26,50 @@ except ImportError:
 
 from ansible.module_utils.ovirt import *
 
+
 DOCUMENTATION = '''
 ---
 module: ovirt_clusters_facts
 short_description: Retrieve facts about one or more oVirt clusters
+author: "Ondra Machacek (@machacekondra)"
 version_added: "2.3"
 description:
     - "Retrieve facts about one or more oVirt clusters."
 notes:
     - "This module creates a new top-level C(ovirt_clusters) fact, which
        contains a list of clusters."
-requirements:
-    - python >= 2.7
-    - ovirt-engine-sdk-python >= 4.0.0
 options:
-   name:
-     description:
-       - Restrict results to clusters with names matching this glob expression (e.g., C<production*>).
-     required: false
-     default: None
+    pattern:
+      description:
+        - "Search term which is accepted by oVirt search backend."
+        - "For example to search cluster X from datacenter Y use following pattern:
+           name=X and datacenter=Y"
+extends_documentation_fragment: ovirt
 '''
 
 EXAMPLES = '''
 # Examples don't contain auth parameter for simplicity,
 # look at ovirt_auth module to see how to reuse authentication:
 
-# Gather facts about all clusters named C<production*>:
+# Gather facts about all clusters which names start with C<production>:
 - ovirt_clusters_facts:
-    name: web*
+    pattern: name=production*
 - debug:
     var: ovirt_clusters
+'''
+
+RETURN = '''
+ovirt_clusters:
+    description: "List of dictionaries describing the clusters. Cluster attribues are mapped to dictionary keys,
+                  all clusters attributes can be found at following url: https://ovirt.example.com/ovirt-engine/api/model#types/cluster."
+    returned: On success.
+    type: list
 '''
 
 
 def main():
     argument_spec = ovirt_full_argument_spec(
-        name=dict(default=None, required=False),
+        pattern=dict(default='', required=False),
     )
     module = AnsibleModule(argument_spec)
     check_sdk(module)
@@ -69,9 +77,7 @@ def main():
     try:
         connection = create_connection(module.params.pop('auth'))
         clusters_service = connection.system_service().clusters_service()
-        clusters = clusters_service.list(
-            search='name=%s' % module.params['name'] if module.params['name'] else None
-        )
+        clusters = clusters_service.list(search=module.params['pattern'])
         module.exit_json(
             changed=False,
             ansible_facts=dict(

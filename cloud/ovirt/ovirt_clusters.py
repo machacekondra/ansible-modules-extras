@@ -22,9 +22,8 @@
 try:
     import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
-    HAS_SDK = True
 except ImportError:
-    HAS_SDK = False
+    pass
 
 from ansible.module_utils.ovirt import *
 
@@ -38,14 +37,10 @@ author: "Ondra Machacek (@machacekondra)"
 description:
     - "Module to manage clusters in oVirt"
 options:
-    id:
-        description:
-            - "ID of the the cluster to manage."
-            - "Name or ID is required."
     name:
         description:
             - "Name of the the cluster to manage."
-            - "Name or ID is required."
+        required: true
     state:
         description:
             - "Should the cluster be present or absent"
@@ -53,7 +48,7 @@ options:
         default: present
     datacenter:
         description:
-            - "Data center name where cluster reside."
+            - "Datacenter name where cluster reside."
     description:
         description:
             - "Description of the cluster."
@@ -95,6 +90,19 @@ EXAMPLES = '''
     state: absent
     name: mycluster
 '''
+
+RETURN = '''
+id:
+    description: ID of the cluster which is managed
+    returned: On success if cluster is found.
+    type: str
+    sample: 7de90f31-222c-436c-a1ca-7e655bd5b60c
+cluster:
+    description: "Dictionary of all the cluster attributes. Cluster attributes can be found on your oVirt instance
+                  at following url: https://ovirt.example.com/ovirt-engine/api/model#types/cluster."
+    returned: On success if cluster is found.
+'''
+
 
 class ClustersModule(BaseModule):
 
@@ -156,8 +164,8 @@ def main():
             choices=['present', 'absent'],
             default='present',
         ),
+        name=dict(default=None, required=True),
         datacenter=dict(default=None),
-        name=dict(default=None),
         description=dict(default=None),
         comment=dict(default=None),
         network=dict(default=None),

@@ -20,12 +20,19 @@
 #
 
 try:
-    import ovirtsdk4 as sdk
     import ovirtsdk4.types as otypes
 except ImportError:
     pass
 
-from ansible.module_utils.ovirt import *
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.ovirt import (
+    BaseModule,
+    check_params,
+    check_sdk,
+    create_connection,
+    equal,
+    ovirt_full_argument_spec,
+)
 
 
 DOCUMENTATION = '''
@@ -57,19 +64,24 @@ options:
             - "Comment of the cluster."
     network:
         description:
-            - "Network of cluster."
+            - "Management network of cluster to access cluster hosts."
     cpu_arch:
         description:
             - "CPU architecture of cluster."
+        choices: ['x86_64', 'ppc64', 'undefined']
     cpu_type:
         description:
-            - "CPU type of cluster."
+            - "CPU codename. For example I(Intel SandyBridge Family)."
     switch_type:
         description:
-            - "Type of the switch of the network of cluster."
+            - "Type of switch to be used by all networks in given cluster.
+               Either I(legacy) which is using linux brigde or I(ovs) using
+               Open vSwitch."
+        choices: ['legacy', 'ovs']
     compatibility_version:
         description:
-            - "Compatibility version of the cluster."
+            - "The compatibility version of the cluster. All hosts in this
+               cluster must support at least this compatibility version."
 extends_documentation_fragment: ovirt
 '''
 
@@ -169,9 +181,9 @@ def main():
         description=dict(default=None),
         comment=dict(default=None),
         network=dict(default=None),
-        cpu_arch=dict(default=None),
+        cpu_arch=dict(default=None, choices=['ppc64', 'undefined', 'x86_64']),
         cpu_type=dict(default=None),
-        switch_type=dict(default=None),
+        switch_type=dict(default=None, choices=['legacy', 'ovs']),
         compatibility_version=dict(default=None),
     )
     module = AnsibleModule(
@@ -202,6 +214,6 @@ def main():
     finally:
         connection.close(logout=False)
 
-from ansible.module_utils.basic import *
+
 if __name__ == "__main__":
     main()

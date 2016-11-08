@@ -19,12 +19,12 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-try:
-    import ovirtsdk4 as sdk
-except ImportError:
-    pass
-
-from ansible.module_utils.ovirt import *
+from ansible.module_utils.ovirt import (
+    check_sdk,
+    create_connection,
+    get_dict_of_struct,
+    ovirt_full_argument_spec,
+)
 
 
 DOCUMENTATION = '''
@@ -89,6 +89,6 @@ def main():
     except Exception as e:
         module.fail_json(msg=str(e))
 
-from ansible.module_utils.basic import *
+from ansible.module_utils.basic import *  # flake8: noqa
 if __name__ == '__main__':
     main()
